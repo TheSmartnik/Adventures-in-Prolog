@@ -6,7 +6,7 @@ While the book is almost 30 years old, it's a terrific and exciting read. A real
 Most of the files in this repo is of no interest what you're looking for is `nani_search.pl`, it's an adventure game you can play around with and get a taste of Prolog.
 
 ### How to run
-* You need swi prolog installed _(you can install it from brew)_
+* You need swi prolog installed _(you can install it with brew)_
 * copy repo
-* run `./nani_search`
+* run `./nani_search.pl`
 
