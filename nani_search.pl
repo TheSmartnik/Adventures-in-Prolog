@@ -1,9 +1,32 @@
+#!/usr/bin/env swipl
+
 :- dynamic
   here/1,
   location/2,
   have/1,
   turned_off/1,
   move_count/1.
+
+:- initialization(main, main).
+
+main:-
+  nani_search.
+
+nani_search:-
+  write('Your persona as the adventurer is that of a three year'),nl,
+  write('old.  The Nani is your security blanket.  It is getting'),nl,
+  write('late and you''re tired, but you can''t go to sleep'),nl,
+  write('without your Nani.  Your mission is to find the Nani.'),nl, nl,
+  write('You control the game by using simple English commands'),nl,
+  write('expressing the action you wish to take.  You can go to'),nl,
+  write('other rooms, look at your surroundings, look in things'),nl,
+  write('take things, drop things, eat things, inventory the'),nl,
+  write('things you have, and turn things on and off.'),nl, nl,
+  write('Hit any key to continue.'),get0(_),
+  write('Type "quit" if you give up.'),nl, nl, write('Enjoy the hunt.'),nl,
+  look,
+  command_loop.
+
 
 % Initial assertions
 room(kitchen).
@@ -24,11 +47,6 @@ location(broccoli, kitchen).
 location(crackers, kitchen).
 location('washing machine', cellar).
 location(nani, 'washing machine').
-
-location_s(object(candle, red, small, 1), kitchen).
-location_s(object(apple, red, small, 1), kitchen).
-location_s(object(apple, green, small, 1), kitchen).
-location_s(object(table, blue, big, 50), kitchen).
 
 door(kitchen, cellar).
 door(kitchen, office).
@@ -100,13 +118,16 @@ verb(thing, take, [take|X]-X).
 verb(thing, put, [drop|X]-X).
 verb(thing, put, [put|X]-X).
 verb(thing, turn_on, [turn,on|X]-X).
+verb(thing, turn_off, [turn,off|X]-X).
+verb(thing, look_in, [look,in|X]-X).
+verb(thing, look_in, [look,inside|X]-X).
 
 noun(place, Place, [Place|X]-X):- room(Place).
 noun(place, 'dining room', [dining,room|X]-X).
 
 noun(thing, Thing, [Thing|X]-X):- location(Thing, _).
 noun(thing, Thing, [Thing|X]-X):- have(Thing).
-noun(thing, 'washing machine', ['washing machine'|X]-X).
+noun(thing, 'washing machine', [washing,machine|X]-X).
 
 object(Type, Object, S1-S3):-
   det(S1-S2),
@@ -130,9 +151,9 @@ command([V], InList):-
 
 % UI
 command_loop:-
-  write("Welcome to Nani Search:"),nl,
   repeat,
   get_command(X),
+  puzzle(X),
   do(X),nl,
   increment_move,
   end_condition(X).
@@ -152,7 +173,7 @@ end_condition(end):-
 
 end_condition(_):-
  move_count(X),
- X > 15,
+ X > 25,
  write('You were too noisy. Your parents woke up and put you to bed without Nani :('),
  !.
 
@@ -188,11 +209,11 @@ do(end):-
   true,
   !.
 
-do(turn_on):-
+do(turn_on(_)):-
   turn_on,
   !.
 
-do(turn_off):-
+do(turn_off(_)):-
   turn_off,
   !.
 
