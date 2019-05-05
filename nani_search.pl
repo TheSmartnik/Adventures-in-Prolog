@@ -5,6 +5,7 @@
   turned_off/1,
   move_count/1.
 
+% Initial assertions
 room(kitchen).
 room(cellar).
 room(office).
@@ -51,12 +52,87 @@ here(kitchen).
 
 move_count(0).
 
+% read a line of words from the user
+
+read_list(L) :-
+  write('> '),
+  read_line(CL),
+  wordlist(L,CL,[]), !.
+read_line(L) :-
+  get0(C),
+  buildlist(C,L).
+buildlist(10,[]) :- !.
+buildlist(C,[C|X]) :-
+  get0(C2),
+  buildlist(C2,X).
+wordlist([X|Y]) --> word(X), whitespace, wordlist(Y).
+wordlist([X]) --> whitespace, wordlist(X).
+wordlist([X]) --> word(X).
+wordlist([X]) --> word(X), whitespace.
+word(W) --> charlist(X), {name(W,X)}.
+charlist([X|Y]) --> chr(X), charlist(Y).
+charlist([X]) --> chr(X).
+chr(X) --> [X],{ X>=48 }.
+whitespace --> whsp, whitespace.
+whitespace --> whsp.
+whsp --> [X], { X<48 }.
+
+
+% NLP
+det([the|X]- X).
+det([a|X]-X).
+det([an|X]-X).
+
+verb(look, [look|X]-X).
+verb(look, [look,around|X]-X).
+verb(inventory, [inventory|X]-X).
+verb(end, [end|X]-X).
+verb(end, [quit|X]-X).
+verb(end, [good,bye|X]-X).
+
+verb(place, goto, [go,to|X]-X).
+verb(place, goto, [go|X]-X).
+verb(place, goto, [move,to|X]-X).
+verb(place, goto, [X|Y]-[X|Y]):-room(X).
+verb(place, goto, ['dining room'|Y]-['dining room'|Y]).
+
+verb(thing, take, [take|X]-X).
+verb(thing, put, [drop|X]-X).
+verb(thing, put, [put|X]-X).
+verb(thing, turn_on, [turn,on|X]-X).
+
+noun(place, Place, [Place|X]-X):- room(Place).
+noun(place, 'dining room', [dining,room|X]-X).
+
+noun(thing, Thing, [Thing|X]-X):- location(Thing, _).
+noun(thing, Thing, [Thing|X]-X):- have(Thing).
+noun(thing, 'washing machine', ['washing machine'|X]-X).
+
+object(Type, Object, S1-S3):-
+  det(S1-S2),
+  noun(Type, Object, S2-S3).
+object(Type, Object, S1-S2):-
+  noun(Type, Object, S1-S2).
+
+get_command(C) :-
+  read_list(L),
+  command(CL,L),
+  C =..  CL,
+  !.
+get_command(_) :-
+  write('I do not understand'), nl, fail.
+
+command([V,O], InList) :-
+  verb(Object_Type, V, InList-S1),
+  object(Object_Type, O, S1-[]).
+command([V], InList):-
+  verb(V, InList-[]).
+
+% UI
 command_loop:-
-  repeat,
   write("Welcome to Nani Search:"),nl,
-  read(X),
-  write(">nani> "),
-  puzzle(X),
+  repeat,
+  get_command(X),
   do(X),nl,
   increment_move,
   end_condition(X).
@@ -76,10 +152,9 @@ end_condition(end):-
 
 end_condition(_):-
  move_count(X),
- X > 20,
+ X > 15,
  write('You were too noisy. Your parents woke up and put you to bed without Nani :('),
  !.
-
 
 do(goto(X)):-
   goto(X),
@@ -105,6 +180,10 @@ do(take(X)):-
   take(X),
   !.
 
+do(put(X)):-
+  put(X),
+  !.
+
 do(end):-
   true,
   !.
@@ -119,6 +198,8 @@ do(turn_off):-
 
 do(_):-
   write('Invalid command').
+
+% Internal Commands
 
 list_things(Place):-
   location(X, Place),
